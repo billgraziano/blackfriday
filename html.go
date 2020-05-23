@@ -18,6 +18,8 @@ package blackfriday
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -45,6 +47,7 @@ const (
 	HTML_SMARTYPANTS_ANGLED_QUOTES             // enable angled double quotes (with HTML_USE_SMARTYPANTS) for double quotes rendering
 	HTML_SMARTYPANTS_QUOTES_NBSP               // enable "French guillemets" (with HTML_USE_SMARTYPANTS)
 	HTML_FOOTNOTE_RETURN_LINKS                 // generate a link at the end of a footnote to return to the source
+	HTML_EMBED_CSS                             // if css is given, embed the content of the file into the HTML
 )
 
 var (
@@ -692,12 +695,28 @@ func (options *Html) DocumentHeader(out *bytes.Buffer) {
 	out.WriteString("  <meta charset=\"utf-8\"")
 	out.WriteString(ending)
 	out.WriteString(">\n")
-	if options.css != "" {
-		out.WriteString("  <link rel=\"stylesheet\" type=\"text/css\" href=\"")
-		attrEscape(out, []byte(options.css))
-		out.WriteString("\"")
-		out.WriteString(ending)
-		out.WriteString(">\n")
+	if options.css != "" { // https://github.com/russross/blackfriday/pull/210/commits/f5efac671c4e96ece2e1d4b0f8bb78739d4d656c
+		// out.WriteString("  <link rel=\"stylesheet\" type=\"text/css\" href=\"")
+		// attrEscape(out, []byte(options.css))
+		// out.WriteString("\"")
+		// out.WriteString(ending)
+		// out.WriteString(">\n")
+		// https://github.com/russross/blackfriday/pull/210/commits/f5efac671c4e96ece2e1d4b0f8bb78739d4d656c
+		if options.flags&HTML_EMBED_CSS != 1 {
+			out.WriteString("  <style>")
+			css, err := ioutil.ReadFile(options.css)
+			if err != nil {
+				log.Fatalf("couldn't read css '%s': %v", options.css, err)
+			}
+			out.Write(css)
+			out.WriteString("  </style>\n")
+		} else {
+			out.WriteString("  <link rel=\"stylesheet\" type=\"text/css\" href=\"")
+			attrEscape(out, []byte(options.css))
+			out.WriteString("\"")
+			out.WriteString(ending)
+			out.WriteString(">\n")
+		}
 	}
 	out.WriteString("</head>\n")
 	out.WriteString("<body>\n")
