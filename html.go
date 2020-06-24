@@ -18,8 +18,6 @@ package blackfriday
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -704,11 +702,12 @@ func (options *Html) DocumentHeader(out *bytes.Buffer) {
 		// https://github.com/russross/blackfriday/pull/210/commits/f5efac671c4e96ece2e1d4b0f8bb78739d4d656c
 		if options.flags&HTML_EMBED_CSS != 1 {
 			out.WriteString("  <style>")
-			css, err := ioutil.ReadFile(options.css)
-			if err != nil {
-				log.Fatalf("couldn't read css '%s': %v", options.css, err)
-			}
-			out.Write(css)
+			// css, err := ioutil.ReadFile(options.css)
+			// if err != nil {
+			// 	log.Fatalf("couldn't read css '%s': %v", options.css, err)
+			// }
+			out.Write([]byte(options.css))
+			//out.Write(css)
 			out.WriteString("  </style>\n")
 		} else {
 			out.WriteString("  <link rel=\"stylesheet\" type=\"text/css\" href=\"")
